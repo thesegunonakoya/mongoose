@@ -3,6 +3,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import {config} from "dotenv";
+
+config();
 
 export const createUser = async (req, res) => {
     try {
@@ -183,15 +186,18 @@ export const updateEmail = async (req, res) => {
 const sendEmail = async (email, subject, text) => {
     try {
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            service: "Gmail",
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
             auth: {
-                user: process.env.EMAIL,
-                pass: process.env.EMAIL_PASSWORD,
+              user: "simp4rebel@gmail.com",
+              pass: process.env.GOOGLE_APP_PASSWORD,
             },
-        });
+          });
 
         const mailOptions = {
-            from: process.env.EMAIL,
+            from: "simp4rebel@gmail.com",
             to: email,
             subject,
             text,
@@ -216,12 +222,13 @@ export const requestPasswordReset = async (req, res) => {
         const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
         user.resetPasswordToken = hashedToken;
-        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        user.resetPasswordExpires = Date.now() + 3600000;
 
         await user.save();
 
-        const resetUrl = `http://localhost:7000/reset-password/${resetToken}`;
+        const resetUrl = `http://localhost:7000/reset-password.html?token=${resetToken}`;
         const message = `You requested a password reset. Please go to this link to reset your password: ${resetUrl}`;
+
 
         await sendEmail(user.email, 'Password Reset Request', message);
 
